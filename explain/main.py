@@ -1,11 +1,8 @@
-# import the json the module for processing the definition file
 import json
 # import the perfomance counter module to measure the model performance
 from time import perf_counter
 # import the model interface module wich is used to interact with the model and to plot graphs
-import interface.interface as io
-# import the model datacollector module which is used to store and process data coming out of the model
-import datacollector.datacollector as dc
+from interface.interface import Interface
 # import all models
 from models import acidbase, ans, blood, breathing, ecg, gas, heart, lungs, metabolism, oxygenation
 # import the elements
@@ -135,6 +132,9 @@ class Model:
         _class = getattr(gas, "Gas")
         self.models[model['name']] = _class(self, **model)
 
+    # initialize the model interface
+    self.interface = Interface(self)
+
   # calculate a number of seconds
   def calculate(self, time_to_calculate):
     # calculate the number of steps needed (= time in seconds / modeling stepsize in seconds)
@@ -163,8 +163,12 @@ class Model:
       for model in self.models:
         self.models[model].model_step()
 
+      # call the interface and datacollector
+      self.interface.model_step(self.model_clock)
+
       # increase the model clock
       self.model_clock += self.modeling_stepsize
+
 
     # stop the performance counter
     perf_stop = perf_counter()
