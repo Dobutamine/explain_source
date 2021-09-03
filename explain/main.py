@@ -143,6 +143,8 @@ class Model:
     # start the performance counter
     perf_start = perf_counter()
 
+    print('calculating model run of {} sec. in {} steps.'.format(time_to_calculate, no_steps))
+
     # execute the model steps
     for step_no in range(no_steps):
       # calculate the transmural pressures of the compliances and time_varying_elastances

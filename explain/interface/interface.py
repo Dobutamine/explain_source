@@ -23,6 +23,8 @@ class Interface:
     # initialize a datacollector
     self.dc = Datacollector(model)
 
+    self.lines = ['r-', 'b-', 'g-', 'c-', 'm-', 'y-', 'k-', 'w-']
+
   def model_step(self, model_clock):
     self.dc.collect_data(model_clock)
 
@@ -30,12 +32,12 @@ class Interface:
     self.model.resistors['DA'].is_enabled = True
   
   def plot_heart_pres(self):
-    self.plot(["LV.pres","RV.pres","LA.pres", "RA.pres", "AA.pres"], 5, 0.0005, True, True)
+    self.plot_time(["LV.pres","RV.pres","LA.pres", "RA.pres", "AA.pres"], 5, 0.0005, True, True)
 
   def plot_heart_vol(self):
-    self.plot(["LV.vol","RV.vol","LA.vol", "RA.vol", "AA.vol"], 5, 0.0005, True, True)
+    self.plot_time(["LV.vol","RV.vol","LA.vol", "RA.vol", "AA.vol"], 5, 0.0005, True, True)
 
-  def plot (self, properties, time_to_calculate = 10, sampleinterval = 0.005, combined = True, sharey = True):
+  def plot_time (self, properties, time_to_calculate = 10, sampleinterval = 0.005, combined = True, sharey = True):
     # first clear the watchllist and this also clears all data
     self.dc.clear_watchlist()
 
@@ -54,10 +56,41 @@ class Interface:
     self.model.calculate(time_to_calculate)
 
     # plot the properties
-    self.draw_graphs(sharey, combined)
+    self.draw_time_graph(sharey, combined)
 
-  def draw_graphs(self, sharey = True, combined = True):
-    lines = ['r-', 'b-', 'g-', 'c-', 'm-', 'y-', 'k-', 'w-']
+  def plot_xy(self, property_x, property_y, time_to_calculate = 2, sampleinterval = 0.0005):
+    # first clear the watchllist and this also clears all data
+    self.dc.clear_watchlist()
+
+     # set the sample interval
+    self.dc.set_sample_interval(sampleinterval)
+
+    self.dc.add_to_watchlist(property_x)
+    self.dc.add_to_watchlist(property_y)
+
+    # calculate the model steps
+    self.model.calculate(time_to_calculate)
+
+    self.draw_xy_graph(property_x, property_y)
+
+  def draw_xy_graph(self, property_x, property_y):
+    no_dp = len(self.dc.collected_data)
+    x = np.zeros(no_dp)
+    y = np.zeros(no_dp)
+
+    for index,t in enumerate(self.dc.collected_data):
+      x[index] = t[property_x]
+      y[index] = t[property_y]
+
+    plt.figure( figsize=(18, 5), dpi=300)
+    # Subplot of figure 1 with id 211 the data (red line r-, first legend = parameter)
+    plt.plot(x, y, self.lines[0], linewidth=1 )
+    plt.xlabel(property_x)
+    plt.ylabel(property_y)
+
+    plt.show()
+
+  def draw_time_graph(self, sharey = False, combined = True):
     parameters = []
     no_parameters = 0
     # get the watch list of the datacollector
@@ -84,7 +117,7 @@ class Interface:
       # fig.tight_layout()
       if (no_parameters > 1):
         for i, ax in enumerate(axs):
-          ax.plot(x, y[i], lines[i], linewidth=1)
+          ax.plot(x, y[i], self.lines[i], linewidth=1)
           ax.set_title(parameters[i])
           ax.set_ylabel('mmHg')
       else:
@@ -96,7 +129,7 @@ class Interface:
       plt.figure( figsize=(18, 5), dpi=300)
       for index, parameter in enumerate(parameters):
         # Subplot of figure 1 with id 211 the data (red line r-, first legend = parameter)
-        plt.plot(x, y[index], lines[index], linewidth=1, label = parameter)
+        plt.plot(x, y[index], self.lines[index], linewidth=1, label = parameter)
         plt.xlabel('time (s)')
         plt.ylabel('mmHg')
         # Add a legend
