@@ -33,22 +33,16 @@ class Compliance:
     self.vol += dvol
 
     # guard against negative volumes (will probably never occur in this routine)
-    if (self.vol < 0):
-      # if there's a negative volume it might corrupt the mass balance of the model so we have to return the amount of volume which could not be displaced to the caller of this function
-      _nondisplaced_volume = -self.vol
-      # set the current volume to zero
-      self.vol = 0
-      # return the amount volume which could not be removed
-      return _nondisplaced_volume
-    else:
-      # massbalance is guaranteed
-      return 0
+    return self.protect_mass_balance
 
   def volume_out (self, dvol, comp_from):
     # add volume
     self.vol -= dvol
 
     # guard against negative volumes (will probably never occur in this routine)
+    return self.protect_mass_balance
+
+  def protect_mass_balance (self):
     if (self.vol < 0):
       # if there's a negative volume it might corrupt the mass balance of the model so we have to return the amount of volume which could not be displaced to the caller of this function
       _nondisplaced_volume = -self.vol

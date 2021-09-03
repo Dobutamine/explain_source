@@ -146,7 +146,7 @@ class Model:
     print('calculating model run of {} sec. in {} steps.'.format(time_to_calculate, no_steps))
 
     # execute the model steps
-    for step_no in range(no_steps):
+    for _ in range(no_steps):
       # calculate the transmural pressures of the compliances and time_varying_elastances
       for tve in self.time_varying_elastances:
         self.time_varying_elastances[tve].calculate_pressure()
@@ -176,8 +176,7 @@ class Model:
     perf_stop = perf_counter()
 
     # print status messages
-    print('ready in {} sec.'.format(perf_stop - perf_start))
-    print('average model step in {} ms'.format(((perf_stop - perf_start) / no_steps) * 1000))
+    print('ready in {} sec. with average step in {} ms'.format((perf_stop - perf_start), ((perf_stop - perf_start) / no_steps) * 1000))
     print('model clock at {} sec'.format(int(self.model_clock)))
 
 # this is the main module
