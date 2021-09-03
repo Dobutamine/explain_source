@@ -54,8 +54,8 @@ class Valve:
 
   def calculate_flow(self):
     # get the pressures from comp1 and comp2
-    p1 = self.comp1.transmural_pressure
-    p2 = self.comp2.transmural_pressure
+    p1 = self.comp1.pres
+    p2 = self.comp2.pres
 
     # calculate the resistance
     self.resistance = self.calculate_resistance(p1, p2)

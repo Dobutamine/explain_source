@@ -10,7 +10,7 @@ class Compliance:
       setattr(self, key, value)
 
     # initialize the dependent properties
-    self.transmural_pressure = 0
+    self.pres = 0
     self.recoil_pressure = 0
     self.pres_outside = 0
 
@@ -25,7 +25,7 @@ class Compliance:
     self.recoil_pressure = vol_above_unstressed * elastance
 
     # calculate the transmural pressure
-    self.transmural_pressure = self.recoil_pressure + self.pres_outside
+    self.pres = self.recoil_pressure + self.pres_outside
 
 
   def volume_in (self, dvol, comp_from):

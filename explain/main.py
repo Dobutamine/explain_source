@@ -133,7 +133,7 @@ class Model:
         self.models[model['name']] = _class(self, **model)
 
     # initialize the model interface
-    self.interface = Interface(self)
+    self.io = Interface(self)
 
   # calculate a number of seconds
   def calculate(self, time_to_calculate):
@@ -164,7 +164,7 @@ class Model:
         self.models[model].model_step()
 
       # call the interface and datacollector
-      self.interface.model_step(self.model_clock)
+      self.io.model_step(self.model_clock)
 
       # increase the model clock
       self.model_clock += self.modeling_stepsize
@@ -180,5 +180,6 @@ class Model:
 
 # this is the main module
 if __name__ == "__main__":
-    neo = Model()
-    print("normal neonate model ready and stored in variable 'neo'.")
+    model = Model()
+    neo = model.io
+    print("normal neonate model instance ready. Interact with using the 'neo' variable.")
