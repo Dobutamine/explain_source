@@ -184,6 +184,11 @@ class Model:
 
 # this is the main module
 if __name__ == "__main__":
-    model = Model()
-    neo = model.io
-    print("normal neonate model instance ready. Interact with using the 'neo' variable.")
+  # specify the JSON mdoel definition file 
+  filename = './definitions/normal_neonate_24h.json'
+  # instantiate a new explain model
+  model = Model(filename)
+  # store a reference to the interface module of the explain model
+  neo = model.io
+  # print the welcome message
+  print(f'Explain engine ready and configured with {filename}')

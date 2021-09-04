@@ -25,6 +25,15 @@ class Interface:
 
     self.lines = ['r-', 'b-', 'g-', 'c-', 'm-', 'y-', 'k-', 'w-']
 
+  def calculate(self, time_to_calculate):
+    # calculate the model steps
+    no_steps = int(time_to_calculate / self.model.modeling_stepsize)
+    print(f'Calculating model run of {time_to_calculate} sec. in {no_steps} steps.')
+    self.model.calculate(time_to_calculate)
+    run_duration = round(self.model.run_duration, 3)
+    step_duration = round(self.model.step_duration, 4)
+    print(f'Ready in {run_duration} sec. Average model step in {step_duration} ms.')
+
   def model_step(self, model_clock):
     self.dc.collect_data(model_clock)
 
@@ -70,9 +79,7 @@ class Interface:
         self.dc.add_to_watchlist(prop_reference)
 
     # calculate the model steps
-    print('calculating model run of {} sec. in {} steps.'.format(time_to_calculate, time_to_calculate / self.model.modeling_stepsize))
-
-    self.model.calculate(time_to_calculate)
+    self.calculate(time_to_calculate)
 
     # plot the properties
     self.draw_time_graph(sharey, combined)
@@ -93,7 +100,7 @@ class Interface:
       self.dc.add_to_watchlist(prop_reference_y)
 
     # calculate the model steps
-    self.model.calculate(time_to_calculate)
+    self.calculate(time_to_calculate)
 
     self.draw_xy_graph(property_x, property_y)
 
