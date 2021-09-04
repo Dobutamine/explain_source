@@ -28,8 +28,23 @@ class Interface:
   def model_step(self, model_clock):
     self.dc.collect_data(model_clock)
 
-  def change_property(self, property, new_value, time):
-    self.model.resistors['DA'].is_enabled = True
+  def change_property(self, prop, new_value, time):
+    # first find the correct reference to the property
+    prop = self.find_model_prop(prop)
+    
+    if (prop != None):
+      # check whether the type of new_value is the same as the model type
+      if type(new_value) == type(getattr(prop['model'], prop['prop'])):
+        setattr(prop['model'], prop['prop'], new_value)
+        current_value = getattr(prop['model'], prop['prop'])
+        label = prop['label']
+        print(f'{label} changed from {current_value} to {new_value}.')
+      else:
+        current_value_type = type(getattr(prop['model'], prop['prop']))
+        new_value_type = type(new_value)
+        print(f'property type mismatch. model property type = {current_value_type}, new value type = {new_value_type}')
+    else:
+      print("property not found in model")
   
   def plot_heart_pres(self):
     self.plot_time(["LV.pres","RV.pres","LA.pres", "RA.pres", "AA.pres"], 5, 0.0005, True, True)
@@ -50,9 +65,13 @@ class Interface:
 
     # add the properties to the watch_list
     for prop in properties:
-      self.dc.add_to_watchlist(prop)
+      prop_reference = self.find_model_prop(prop)
+      if (prop_reference != None):
+        self.dc.add_to_watchlist(prop_reference)
 
     # calculate the model steps
+    print('calculating model run of {} sec. in {} steps.'.format(time_to_calculate, time_to_calculate / self.model.modeling_stepsize))
+
     self.model.calculate(time_to_calculate)
 
     # plot the properties
@@ -65,8 +84,13 @@ class Interface:
      # set the sample interval
     self.dc.set_sample_interval(sampleinterval)
 
-    self.dc.add_to_watchlist(property_x)
-    self.dc.add_to_watchlist(property_y)
+    prop_reference_x = self.find_model_prop(property_x)
+    if (prop_reference_x != None):
+      self.dc.add_to_watchlist(prop_reference_x)
+
+    prop_reference_y = self.find_model_prop(property_y)
+    if (prop_reference_y != None):
+      self.dc.add_to_watchlist(prop_reference_y)
 
     # calculate the model steps
     self.model.calculate(time_to_calculate)
@@ -137,4 +161,30 @@ class Interface:
 
     plt.show()
     
+  def find_model_prop(self, prop):
+    # split the model from the prop
+    t  = prop.split(sep=".")
+    if (len(t) == 2):
+      # try to find the parameter in the model
+      if t[0] in self.model.compliances:
+        if (hasattr(self.model.compliances[t[0]], t[1])):
+          return { 'label': prop, 'model': self.model.compliances[t[0]], 'prop': t[1]}
 
+      if t[0] in self.model.time_varying_elastances:
+        if (hasattr(self.model.time_varying_elastances[t[0]], t[1])):
+          return { 'label': prop, 'model': self.model.time_varying_elastances[t[0]], 'prop': t[1]}
+      
+      if t[0] in self.model.resistors:
+        if (hasattr(self.model.resistors[t[0]], t[1])):
+          return { 'label': prop, 'model': self.model.resistors[t[0]], 'prop': t[1]}
+
+      if t[0] in self.model.valves:
+        if (hasattr(self.model.valves[t[0]], t[1])):
+          return { 'label': prop, 'model': self.model.valves[t[0]], 'prop': t[1]}
+
+      if t[0] in self.model.models:
+        if (hasattr(self.model.models[t[0]], t[1])):
+          return { 'label': prop, 'model': self.model.models[t[0]], 'prop': t[1]}
+
+    return None
+    

@@ -25,6 +25,10 @@ class Model:
     # initialize all model components with the parameters from the JSON file
     self.initialize(self.model_definition)
 
+    # define some model performance properties
+    self.step_duration = 0
+    self.run_duration = 0
+
   # load and process the model definition file
   def load_definition_JSON(self, file_name):
     # open the JSON file
@@ -143,10 +147,9 @@ class Model:
     # start the performance counter
     perf_start = perf_counter()
 
-    print('calculating model run of {} sec. in {} steps.'.format(time_to_calculate, no_steps))
-
     # execute the model steps
     for _ in range(no_steps):
+
       # calculate the transmural pressures of the compliances and time_varying_elastances
       for tve in self.time_varying_elastances:
         self.time_varying_elastances[tve].calculate_pressure()
@@ -165,7 +168,7 @@ class Model:
       for model in self.models:
         self.models[model].model_step()
 
-      # call the interface and datacollector
+      # call the user interface
       self.io.model_step(self.model_clock)
 
       # increase the model clock
@@ -175,9 +178,9 @@ class Model:
     # stop the performance counter
     perf_stop = perf_counter()
 
-    # print status messages
-    print('ready in {} sec. with average step in {} ms'.format((perf_stop - perf_start), ((perf_stop - perf_start) / no_steps) * 1000))
-    print('model clock at {} sec'.format(int(self.model_clock)))
+    # store the performance metrics
+    self.run_duration = perf_stop - perf_start
+    self.step_duration = (self.run_duration / no_steps) * 1000
 
 # this is the main module
 if __name__ == "__main__":

@@ -25,7 +25,10 @@ class Datacollector:
     self.collected_data = []
 
   def clear_watchlist(self):
+    # first clear all data
     self.clear_data()
+
+    # empty the watch list
     self.watch_list = []
 
   def set_sample_interval(self, new_interval):
@@ -34,38 +37,9 @@ class Datacollector:
   def add_to_watchlist(self, property):
     # first clear all data
     self.clear_data()
-    # validate the input
-    t  = property.split(sep=".")
-    if (len(t) == 2):
-      property_found = False
-      # try to find the parameter in the model
-      if t[0] in self.model.compliances:
-        property_found = True
-        self.watch_list.append({ 'label': property, 'model': self.model.compliances[t[0]], 'property': t[1]})
 
-      if t[0] in self.model.time_varying_elastances:
-        property_found = True
-        self.watch_list.append({ 'label': property, 'model': self.model.time_varying_elastances[t[0]], 'property': t[1]})
-      
-      if t[0] in self.model.resistors:
-        property_found = True
-        self.watch_list.append({ 'label': property, 'model': self.model.resistors[t[0]], 'property': t[1]})
-
-      if t[0] in self.model.valves:
-        property_found = True
-        self.watch_list.append({ 'label': property, 'model': self.model.valves[t[0]], 'property': t[1]})
-
-      if t[0] in self.model.models:
-        property_found = True
-        self.watch_list.append({ 'label': property, 'model': self.model.models[t[0]], 'property': t[1]})
-
-
-      if property_found == False:
-        return ("property not found in model")
-    else:
-      return ("invalid property configuration")
-    
-    return True
+    # add to the watchlist
+    self.watch_list.append(property)
 
   def collect_data(self, model_clock):
     self._interval_counter += self.modeling_stepsize
@@ -76,6 +50,6 @@ class Datacollector:
       }
       for parameter in self.watch_list:
         label = parameter['label']
-        value = getattr(parameter['model'], parameter['property'])
+        value = getattr(parameter['model'], parameter['prop'])
         data_object[label] = value
         self.collected_data.append(data_object)
