@@ -28,7 +28,7 @@ class Interface:
   def model_step(self, model_clock):
     self.dc.collect_data(model_clock)
 
-  def change_property(self, prop, new_value, time):
+  def change_prop(self, prop, new_value):
     # first find the correct reference to the property
     prop = self.find_model_prop(prop)
     
