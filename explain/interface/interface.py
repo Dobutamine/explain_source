@@ -29,10 +29,14 @@ class Interface:
     # define a list holding the prop changes
     self.propChanges = []
 
+    self.prop_update_interval = 0.015
+    self.prop_update_counter = 0
+
   def calculate(self, time_to_calculate):
     # calculate the model steps
     no_steps = int(time_to_calculate / self.model.modeling_stepsize)
     print(f'Calculating model run of {time_to_calculate} sec. in {no_steps} steps.')
+    self.prop_update_counter = 0
     self.model.calculate(time_to_calculate)
     run_duration = round(self.model.run_duration, 3)
     step_duration = round(self.model.step_duration, 4)
@@ -41,11 +45,15 @@ class Interface:
   def model_step(self, model_clock):
     self.dc.collect_data(model_clock)
     # process the propchanges
-    for change in self.propChanges:
-      change.update()
-      if change.completed:
-        self.propChanges.remove(change)
+    if (self.prop_update_counter >= self.prop_update_interval):
+      self.prop_update_counter = 0
+      for change in self.propChanges:
+        change.update()
+        if change.completed:
+          self.propChanges.remove(change)
 
+    self.prop_update_counter += self.t
+      
   def schedule_prop_change(self, prop, new_value, in_time, at_time = 0):
     prop = self.find_model_prop(prop)
     if (prop != None):
@@ -60,8 +68,7 @@ class Interface:
         print(f'property type mismatch. model property type = {current_value_type}, new value type = {new_value_type}')
     else:
       print("property not found in model")
-
-      
+  
   def prop_change(self, prop, new_value):
     # first find the correct reference to the property
     prop = self.find_model_prop(prop)
@@ -86,7 +93,57 @@ class Interface:
   def plot_heart_vol(self):
     self.plot_time(["LV.vol","RV.vol","LA.vol", "RA.vol", "AA.vol"], 5, 0.0005, True, True)
 
-  def plot_time (self, properties, time_to_calculate = 10, sampleinterval = 0.005, combined = True, sharey = True):
+  def analyze(self, properties, time_to_calculate = 10, sampleinterval = 0.005):
+    # first clear the watchllist and this also clears all data
+    self.dc.clear_watchlist()
+
+    # set the sample interval
+    self.dc.set_sample_interval(sampleinterval)
+
+    # add the property to the watchlist
+    if (isinstance(properties, str)):
+      properties = [properties]
+
+    # add the properties to the watch_list
+    for prop in properties:
+      prop_reference = self.find_model_prop(prop)
+      if (prop_reference != None):
+        self.dc.add_to_watchlist(prop_reference)
+
+    # calculate the model steps
+    self.calculate(time_to_calculate)
+
+    print("")
+    parameters = []
+    no_parameters = 0
+    # get the watch list of the datacollector
+    for watched_parameter in self.dc.watch_list:
+      parameters.append(watched_parameter['label'])
+
+    no_dp = len(self.dc.collected_data)
+    x = np.zeros(no_dp)
+    y = []
+
+    for parameter in enumerate(parameters):
+      y.append(np.zeros(no_dp))
+      no_parameters += 1
+
+    for index,t in enumerate(self.dc.collected_data):
+      x[index] = t['time']
+
+      for idx, parameter in enumerate(parameters):
+        y[idx][index] = t[parameter]
+
+    for idx, parameter in enumerate(parameters):
+      data = np.array(y[idx])
+      max = np.amax(data)
+      min = np.amin(data)
+      median = np.median(data)
+      std = np.std(data)
+
+      print(f"{parameter} -> max: {max}, min: {min}, median {median}, std {std}")
+
+  def plot_time (self, properties, time_to_calculate = 10,  combined = True, sharey = True, sampleinterval = 0.005):
     # first clear the watchllist and this also clears all data
     self.dc.clear_watchlist()
 
@@ -146,6 +203,20 @@ class Interface:
 
     plt.show()
 
+    max_x = np.amax(x)
+    min_x = np.amin(x)
+    median_x = np.median(x)
+    std_x = np.std(x)
+
+    print(f"{property_x} -> max: {max_x}, min: {min_x}, median {median_x}, std {std_x}")
+
+    max_y = np.amax(y)
+    min_y = np.amin(y)
+    median_y = np.median(y)
+    std_y = np.std(y)
+
+    print(f"{property_y} -> max: {max_y}, min: {min_y}, median {median_y}, std {std_y}")
+
   def draw_time_graph(self, sharey = False, combined = True):
     parameters = []
     no_parameters = 0
@@ -166,6 +237,7 @@ class Interface:
 
       for idx, parameter in enumerate(parameters):
         y[idx][index] = t[parameter]
+
 
     # determine number of needed plots
     if (combined == False):
@@ -192,6 +264,15 @@ class Interface:
         plt.legend()
 
     plt.show()
+
+    for idx, parameter in enumerate(parameters):
+      data = np.array(y[idx])
+      max = np.amax(data)
+      min = np.amin(data)
+      median = np.median(data)
+      std = np.std(data)
+
+      print(f"{parameter} -> max: {max}, min: {min}, median {median}, std {std}")
     
   def find_model_prop(self, prop):
     # split the model from the prop
@@ -222,7 +303,7 @@ class Interface:
     
 
 class propChange:
-  def __init__(self, prop, new_value, in_time, at_time = 0, update_interval = 0.0005):
+  def __init__(self, prop, new_value, in_time, at_time = 0, update_interval = 0.015):
 
     self.prop = prop
     self.current_value = getattr(prop['model'], prop['prop'])
