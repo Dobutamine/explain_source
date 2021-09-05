@@ -49,10 +49,19 @@ class Interface:
   def schedule_prop_change(self, prop, new_value, in_time, at_time = 0):
     prop = self.find_model_prop(prop)
     if (prop != None):
-      new_prop_change = propChange(prop, new_value, in_time, at_time)
-      self.propChanges.append(new_prop_change)
-      print(f"{prop['label']} is scheduled to change from {new_prop_change.initial_value} to {new_value} in {in_time} sec. at {at_time} sec. during next model run.")
+      # check whether the type of new_value is the same as the model type
+      if type(new_value) == type(getattr(prop['model'], prop['prop'])):
+        new_prop_change = propChange(prop, new_value, in_time, at_time)
+        self.propChanges.append(new_prop_change)
+        print(f"{prop['label']} is scheduled to change from {new_prop_change.initial_value} to {new_value} in {in_time} sec. at {at_time} sec. during next model run.")
+      else:
+        current_value_type = type(getattr(prop['model'], prop['prop']))
+        new_value_type = type(new_value)
+        print(f'property type mismatch. model property type = {current_value_type}, new value type = {new_value_type}')
+    else:
+      print("property not found in model")
 
+      
   def prop_change(self, prop, new_value):
     # first find the correct reference to the property
     prop = self.find_model_prop(prop)
