@@ -28,7 +28,6 @@ class Interface:
 
     # define a list holding the prop changes
     self.propChanges = []
-
     self.prop_update_interval = 0.015
     self.prop_update_counter = 0
 
