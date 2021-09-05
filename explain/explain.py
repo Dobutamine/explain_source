@@ -40,7 +40,7 @@ class Model:
     # return the dictionary
     return converted
 
-  # initiliaze all elements and models
+  # initialize all elements and models
   def initialize(self, model_definition):
     # get the model stepsize from the model definition
     self.modeling_stepsize = model_definition['modeling_stepsize']

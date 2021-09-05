@@ -15,32 +15,35 @@ class Compliance:
     self.pres_outside = 0
 
   def calculate_pressure (self):
-    # calculate the volume above the unstressed volume
-    vol_above_unstressed = self.vol - self.u_vol
+    if self.is_enabled:
+      # calculate the volume above the unstressed volume
+      vol_above_unstressed = self.vol - self.u_vol
 
-    # calculate the elastance, which is volume dependent in a non-linear way
-    elastance = self.el_base + self.el_k * pow(vol_above_unstressed, 2)
+      # calculate the elastance, which is volume dependent in a non-linear way
+      elastance = self.el_base + self.el_k * pow(vol_above_unstressed, 2)
 
-    # calculate pressure in the compliance
-    self.recoil_pressure = vol_above_unstressed * elastance
+      # calculate pressure in the compliance
+      self.recoil_pressure = vol_above_unstressed * elastance
 
-    # calculate the transmural pressure
-    self.pres = self.recoil_pressure + self.pres_outside
+      # calculate the transmural pressure
+      self.pres = self.recoil_pressure + self.pres_outside
 
 
   def volume_in (self, dvol, comp_from):
-    # add volume
-    self.vol += dvol
+    if self.is_enabled:
+      # add volume
+      self.vol += dvol
 
-    # guard against negative volumes (will probably never occur in this routine)
-    return self.protect_mass_balance
+      # guard against negative volumes (will probably never occur in this routine)
+      return self.protect_mass_balance
 
   def volume_out (self, dvol, comp_from):
-    # add volume
-    self.vol -= dvol
+    if self.is_enabled:
+      # add volume
+      self.vol -= dvol
 
-    # guard against negative volumes (will probably never occur in this routine)
-    return self.protect_mass_balance
+      # guard against negative volumes (will probably never occur in this routine)
+      return self.protect_mass_balance
 
   def protect_mass_balance (self):
     if (self.vol < 0):

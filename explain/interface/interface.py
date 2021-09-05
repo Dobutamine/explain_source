@@ -23,7 +23,11 @@ class Interface:
     # initialize a datacollector
     self.dc = Datacollector(model)
 
+    # plot line colors
     self.lines = ['r-', 'b-', 'g-', 'c-', 'm-', 'y-', 'k-', 'w-']
+
+    # define a list holding the prop changes
+    self.propChanges = []
 
   def calculate(self, time_to_calculate):
     # calculate the model steps
@@ -36,8 +40,20 @@ class Interface:
 
   def model_step(self, model_clock):
     self.dc.collect_data(model_clock)
+    # process the propchanges
+    for change in self.propChanges:
+      change.update()
+      if change.completed:
+        self.propChanges.remove(change)
 
-  def change_prop(self, prop, new_value):
+  def schedule_prop_change(self, prop, new_value, in_time, at_time = 0):
+    prop = self.find_model_prop(prop)
+    if (prop != None):
+      new_prop_change = propChange(prop, new_value, in_time, at_time)
+      self.propChanges.append(new_prop_change)
+      print(f"{prop['label']} is scheduled to change from {new_prop_change.initial_value} to {new_value} in {in_time} sec. at {at_time} sec. during next model run.")
+
+  def prop_change(self, prop, new_value):
     # first find the correct reference to the property
     prop = self.find_model_prop(prop)
     
@@ -195,3 +211,65 @@ class Interface:
 
     return None
     
+
+class propChange:
+  def __init__(self, prop, new_value, in_time, at_time = 0, update_interval = 0.0005):
+
+    self.prop = prop
+    self.current_value = getattr(prop['model'], prop['prop'])
+    self.initial_value = self.current_value
+    self.target_value = new_value
+    self.at_time = at_time
+    self.in_time = in_time
+
+    if (in_time > 0):
+      self.step_size = ((self.target_value - self.current_value) / self.in_time) * update_interval
+    else:
+      self.step_size = 0
+
+    
+    self.update_interval = update_interval
+    self.running = False
+    self.completed = False
+    self.running_time = 0
+  
+  def update (self):
+    if self.completed == False:
+      # check whether the property should start changing (if the at_time has passed)
+      if self.running_time >= self.at_time:
+        if (self.running == False):
+          print(f"- {self.prop['label']} change started at {self.running_time}. Inital value: {self.initial_value}")
+        self.running = True
+      else:
+        self.running = False
+
+      self.running_time += self.update_interval
+
+      if (self.running):
+        self.current_value += self.step_size
+        if abs(self.current_value - self.target_value) < abs(self.step_size):
+          self.current_value = self.target_value
+          self.step_size = 0
+          self.running = False
+          self.completed = True
+          
+        if (self.step_size == 0):
+          self.current_value = self.target_value
+          self.completed = True
+          print(f"- {self.prop['label']} change stopped at {self.running_time}. New value: {self.current_value}")
+
+        setattr(self.prop['model'], self.prop['prop'], self.current_value)
+
+  def cancel (self):
+    self.step_size = 0
+    self.current_value = self.initial_value
+    self.completed = True
+    setattr(self.prop['model'], self.prop['prop'], self.current_value)
+
+  def complete (self):
+    self.step_size = 0
+    self.current_value = self.target_value
+    self.completed = True
+    setattr(self.prop['model'], self.prop['prop'], self.current_value)
+
+  
