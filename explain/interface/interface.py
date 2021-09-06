@@ -86,10 +86,10 @@ class Interface:
       print("property not found in model")
   
   def plot_heart_pres(self):
-    self.plot_time(["LV.pres","RV.pres","LA.pres", "RA.pres", "AA.pres"], 5, 0.0005, True, True)
+    self.plot_time(["LV.pres","RV.pres","LA.pres", "RA.pres", "AA.pres"], 5, True, True, 0.005)
 
   def plot_heart_vol(self):
-    self.plot_time(["LV.vol","RV.vol","LA.vol", "RA.vol", "AA.vol"], 5, 0.0005, True, True)
+    self.plot_time(["LV.vol","RV.vol","LA.vol", "RA.vol", "AA.vol"], 5, True, True, 0.005)
 
   def gas_flows(self, time_to_calculate = 10):
     self.dc.clear_watchlist()
