@@ -91,6 +91,102 @@ class Interface:
   def plot_heart_vol(self):
     self.plot_time(["LV.vol","RV.vol","LA.vol", "RA.vol", "AA.vol"], 5, 0.0005, True, True)
 
+  def gas_flows(self, time_to_calculate = 10):
+    self.dc.clear_watchlist()
+
+    properties = []
+    for bc in self.model.resistors:
+      subtype = getattr(self.model.resistors[bc], "subtype")
+      if (subtype == 'gas'):
+        properties.append(bc + ".flow")
+    
+    for valve in self.model.valves:
+      subtype = getattr(self.model.valves[valve], "subtype")
+      if (subtype == 'gas'):
+        properties.append(valve + ".flow")
+    
+    self.analyze(properties, time_to_calculate)
+
+  def blood_flows(self, time_to_calculate = 10):
+    self.dc.clear_watchlist()
+
+    properties = []
+    for bc in self.model.resistors:
+      subtype = getattr(self.model.resistors[bc], "subtype")
+      if (subtype == 'blood'):
+        properties.append(bc + ".flow")
+    
+    for valve in self.model.valves:
+      subtype = getattr(self.model.valves[valve], "subtype")
+      if (subtype == 'blood'):
+        properties.append(valve + ".flow")
+    
+    self.analyze(properties, time_to_calculate)
+
+  def blood_pressures(self, time_to_calculate = 10):
+    self.dc.clear_watchlist()
+
+    properties = []
+    for bc in self.model.compliances:
+      subtype = getattr(self.model.compliances[bc], "subtype")
+      if (subtype == 'blood'):
+        properties.append(bc + ".pres")
+
+    for tve in self.model.time_varying_elastances:
+      subtype = getattr(self.model.time_varying_elastances[tve], "subtype")
+      if (subtype == 'blood'):
+        properties.append(tve + ".pres")
+
+    self.analyze(properties, time_to_calculate)
+  
+  def blood_volumes(self, time_to_calculate = 10):
+    self.dc.clear_watchlist()
+
+    properties = []
+    for bc in self.model.compliances:
+      subtype = getattr(self.model.compliances[bc], "subtype")
+      if (subtype == 'blood'):
+        properties.append(bc + ".vol")
+
+    for tve in self.model.time_varying_elastances:
+      subtype = getattr(self.model.time_varying_elastances[tve], "subtype")
+      if (subtype == 'blood'):
+        properties.append(tve + ".vol")
+
+    self.analyze(properties, time_to_calculate)
+
+  def gas_pressures(self, time_to_calculate = 10):
+    self.dc.clear_watchlist()
+
+    properties = []
+    for bc in self.model.compliances:
+      subtype = getattr(self.model.compliances[bc], "subtype")
+      if (subtype == 'gas'):
+        properties.append(bc + ".pres")
+
+    for tve in self.model.time_varying_elastances:
+      subtype = getattr(self.model.time_varying_elastances[tve], "subtype")
+      if (subtype == 'gas'):
+        properties.append(tve + ".pres")
+
+    self.analyze(properties, time_to_calculate)
+
+  def gas_volumes(self, time_to_calculate = 10):
+    self.dc.clear_watchlist()
+
+    properties = []
+    for bc in self.model.compliances:
+      subtype = getattr(self.model.compliances[bc], "subtype")
+      if (subtype == 'gas'):
+        properties.append(bc + ".vol")
+
+    for tve in self.model.time_varying_elastances:
+      subtype = getattr(self.model.time_varying_elastances[tve], "subtype")
+      if (subtype == 'gas'):
+        properties.append(tve + ".vol")
+
+    self.analyze(properties, time_to_calculate)
+
   def analyze(self, properties, time_to_calculate = 10, sampleinterval = 0.005):
     # first clear the watchllist and this also clears all data
     self.dc.clear_watchlist()
@@ -111,6 +207,8 @@ class Interface:
     # calculate the model steps
     self.calculate(time_to_calculate)
 
+    print("")
+
     parameters = []
     no_parameters = 0
     # get the watch list of the datacollector
@@ -120,6 +218,7 @@ class Interface:
     no_dp = len(self.dc.collected_data)
     x = np.zeros(no_dp)
     y = []
+    heartbeats = 0
 
     for parameter in enumerate(parameters):
       y.append(np.zeros(no_dp))
@@ -155,9 +254,16 @@ class Interface:
         sum = np.sum(data)
         flow = (sum * sampleinterval / (t_end - t_start)) * 60
         flow = round(flow, 5)
+        bpm = (heartbeats / (t_end - t_start)) * 60
+        sv = (sum * sampleinterval / (t_end - t_start))  * 60 / bpm
+        sv = round(sv * 1000, 5)
 
-        print("{:<10} mean: {:<10} l/min". format(parameter, flow))
-      
+        print("{:<16}: {:<8} l/min, stroke volume: {:<5} ml". format(parameter, flow, sv))
+
+      if prop_category[1] == "ncc_ventricular":
+        data = np.array(y[idx])
+        heartbeats = np.count_nonzero(data == 0)
+        
   def plot_time (self, properties, time_to_calculate = 10,  combined = True, sharey = True, sampleinterval = 0.005):
     # first clear the watchllist and this also clears all data
     self.dc.clear_watchlist()
