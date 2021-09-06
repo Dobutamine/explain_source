@@ -1,6 +1,5 @@
 import math
 from typing import ChainMap
-from matplotlib import lines
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -112,7 +111,6 @@ class Interface:
     # calculate the model steps
     self.calculate(time_to_calculate)
 
-    print("")
     parameters = []
     no_parameters = 0
     # get the watch list of the datacollector
@@ -134,14 +132,32 @@ class Interface:
         y[idx][index] = t[parameter]
 
     for idx, parameter in enumerate(parameters):
-      data = np.array(y[idx])
-      max = np.amax(data)
-      min = np.amin(data)
-      median = np.median(data)
-      std = np.std(data)
+      prop_category  = parameter.split(sep=".")
 
-      print(f"{parameter} -> max: {max}, min: {min}, median {median}, std {std}")
+      if prop_category[1] == "pres":
+        data = np.array(y[idx])
+        max = round(np.amax(data), 5)
+        min = round(np.amin(data), 5)
 
+        print("{:<10} max : {:<10} min: {:<10} mmHg". format(parameter, max, min))
+      
+      if prop_category[1] == "vol":
+        data = np.array(y[idx])
+        max = round(np.amax(data), 5)
+        min = round(np.amin(data), 5)
+
+        print("{:<10} max : {:<10} min: {:<10} liter". format(parameter, max, min))
+
+      if prop_category[1] == "flow":
+        data = np.array(y[idx])
+        t_start = x[0]
+        t_end = x[-1]
+        sum = np.sum(data)
+        flow = (sum * sampleinterval / (t_end - t_start)) * 60
+        flow = round(flow, 5)
+
+        print("{:<10} mean: {:<10} l/min". format(parameter, flow))
+      
   def plot_time (self, properties, time_to_calculate = 10,  combined = True, sharey = True, sampleinterval = 0.005):
     # first clear the watchllist and this also clears all data
     self.dc.clear_watchlist()
@@ -202,26 +218,13 @@ class Interface:
 
     plt.show()
 
-    max_x = np.amax(x)
-    min_x = np.amin(x)
-    median_x = np.median(x)
-    std_x = np.std(x)
-
-    print(f"{property_x} -> max: {max_x}, min: {min_x}, median {median_x}, std {std_x}")
-
-    max_y = np.amax(y)
-    min_y = np.amin(y)
-    median_y = np.median(y)
-    std_y = np.std(y)
-
-    print(f"{property_y} -> max: {max_y}, min: {min_y}, median {median_y}, std {std_y}")
-
   def draw_time_graph(self, sharey = False, combined = True):
     parameters = []
     no_parameters = 0
     # get the watch list of the datacollector
     for watched_parameter in self.dc.watch_list:
-      parameters.append(watched_parameter['label'])
+      if (watched_parameter['label'] != "ecg.ncc_ventricular" and watched_parameter['label'] != "ecg.ncc_atrial"):
+        parameters.append(watched_parameter['label'])
 
     no_dp = len(self.dc.collected_data)
     x = np.zeros(no_dp)
@@ -248,7 +251,7 @@ class Interface:
           ax.set_title(parameters[i])
           ax.set_ylabel('mmHg')
       else:
-          axs.plot(x, y[0], lines[0], linewidth=1)
+          axs.plot(x, y[0], self.lines[0], linewidth=1)
           axs.set_title(parameters[0])
           axs.set_ylabel('mmHg')
     
@@ -263,15 +266,6 @@ class Interface:
         plt.legend()
 
     plt.show()
-
-    for idx, parameter in enumerate(parameters):
-      data = np.array(y[idx])
-      max = np.amax(data)
-      min = np.amin(data)
-      median = np.median(data)
-      std = np.std(data)
-
-      print(f"{parameter} -> max: {max}, min: {min}, median {median}, std {std}")
     
   def find_model_prop(self, prop):
     # split the model from the prop
@@ -300,7 +294,6 @@ class Interface:
 
     return None
     
-
 class propChange:
   def __init__(self, prop, new_value, in_time, at_time = 0, update_interval = 0.015):
 

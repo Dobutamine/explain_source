@@ -18,8 +18,16 @@ class Datacollector:
     # get the modeling stepsize from the model
     self.modeling_stepsize = model.modeling_stepsize
 
+    # add two always needed properties to the watchlist
+    self.ncc_ventricular = {'label': 'ecg.ncc_ventricular', 'model': self.model.models['ecg'], 'prop': 'ncc_ventricular'}
+    self.ncc_atrial = {'label': 'ecg.ncc_atrial', 'model': self.model.models['ecg'], 'prop': 'ncc_atrial'}
+
     # define the data list
     self.collected_data = []
+
+    # add the two always there
+    self.watch_list.append(self.ncc_atrial)
+    self.watch_list.append(self.ncc_ventricular)
 
   def clear_data (self):
     self.collected_data = []
@@ -30,6 +38,10 @@ class Datacollector:
 
     # empty the watch list
     self.watch_list = []
+
+    # add the two always there
+    self.watch_list.append(self.ncc_atrial)
+    self.watch_list.append(self.ncc_ventricular)
 
   def set_sample_interval(self, new_interval):
     self.sample_interval = new_interval
@@ -42,8 +54,7 @@ class Datacollector:
     self.watch_list.append(property)
 
   def collect_data(self, model_clock):
-    self._interval_counter += self.modeling_stepsize
-    if (self._interval_counter > self.sample_interval):
+    if (self._interval_counter >= self.sample_interval):
       self._interval_counter = 0
       data_object = {
         'time': model_clock
@@ -52,4 +63,6 @@ class Datacollector:
         label = parameter['label']
         value = getattr(parameter['model'], parameter['prop'])
         data_object[label] = value
-        self.collected_data.append(data_object)
+      self.collected_data.append(data_object)
+    
+    self._interval_counter += self.modeling_stepsize
