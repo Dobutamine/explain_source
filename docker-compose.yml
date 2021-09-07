@@ -2,8 +2,8 @@ version: '3'
 
 services: 
   pypy:
-    build: ./explain
+    build: .
     ports:
       - 8880:8880
     volumes:
-      - ./explain:/explain
+      - .:/explain

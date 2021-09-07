@@ -181,14 +181,3 @@ class Model:
     # store the performance metrics
     self.run_duration = perf_stop - perf_start
     self.step_duration = (self.run_duration / no_steps) * 1000
-
-# this is the main module
-if __name__ == "__main__":
-  # specify the JSON mdoel definition file 
-  filename = './definitions/normal_neonate_24h.json'
-  # instantiate a new explain model
-  model = Model(filename)
-  # store a reference to the interface module of the explain model
-  neo = model.io
-  # print the welcome message
-  print(f'Explain engine ready and configured with {filename}')
