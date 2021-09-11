@@ -28,6 +28,7 @@ class Model:
     # define some model performance properties
     self.step_duration = 0
     self.run_duration = 0
+    
 
   # load and process the model definition file
   def load_definition_JSON(self, file_name):
