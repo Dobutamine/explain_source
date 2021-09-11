@@ -1,9 +1,0 @@
-version: '3'
-
-services: 
-  pypy:
-    build: .
-    ports:
-      - 8880:8880
-    volumes:
-      - .:/explain
